@@ -7,7 +7,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   default_node_pool {
     name           = "default"
     node_count     = 1
-    vm_size        = "Standard_B2s" # Rẻ nhất (~$0.013/giờ)
+    vm_size        = "Standard_B2s"
     vnet_subnet_id = var.vnet_subnet_id
   }
 
@@ -16,7 +16,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin = "kubenet" # Miễn phí, đơn giản hơn "azure"
+    network_plugin = "kubenet"
+    service_cidr   = "10.1.0.0/16" # Thay đổi để tránh trùng với VNet
+    dns_service_ip = "10.1.0.10"   # Phải nằm trong service_cidr
   }
 }
 
