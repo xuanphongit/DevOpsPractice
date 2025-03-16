@@ -1,0 +1,53 @@
+trigger: none # Chỉ chạy thủ công
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: todo-app-secrets
+
+steps:
+- task: AzureCLI@2
+  displayName: 'Install Terraform'
+  inputs:
+    azureSubscription: 'azure-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      sudo apt-get update && sudo apt-get install terraform
+
+- task: Bash@3
+  displayName: 'Terraform Init'
+  inputs:
+    targetType: 'inline'
+    script: |
+      terraform init -backend-config="resource_group_name=terraform-state-rg" \
+                     -backend-config="storage_account_name=tfstateterraform" \
+                     -backend-config="container_name=tfstate" \
+                     -backend-config="key=terraform.tfstate"
+  env:
+    ARM_CLIENT_ID: $(CLIENT_ID)
+    ARM_CLIENT_SECRET: $(CLIENT_SECRET)
+    ARM_TENANT_ID: $(TENANT_ID)
+    ARM_SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+
+- task: Bash@3
+  displayName: 'Terraform Destroy'
+  inputs:
+    targetType: 'inline'
+    script: |
+      terraform destroy -var-file="terraform.tfvars" \
+                        -var "client_id=$(CLIENT_ID)" \
+                        -var "client_secret=$(CLIENT_SECRET)" \
+                        -var "tenant_id=$(TENANT_ID)" \
+                        -var "subscription_id=$(SUBSCRIPTION_ID)" \
+                        -var "sql_admin_password=$(SQL_PASSWORD)" \
+                        -auto-approve
+  env:
+    ARM_CLIENT_ID: $(CLIENT_ID)
+    ARM_CLIENT_SECRET: $(CLIENT_SECRET)
+    ARM_TENANT_ID: $(TENANT_ID)
+    ARM_SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+    SQL_PASSWORD: $(SQL_PASSWORD)
