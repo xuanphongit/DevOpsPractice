@@ -25,7 +25,7 @@ steps:
     targetType: 'inline'
     script: |
       terraform init -backend-config="resource_group_name=terraform-state-rg" \
-                     -backend-config="storage_account_name=<your_storage_account_name>" \
+                     -backend-config="storage_account_name=tfstateterraform" \
                      -backend-config="container_name=tfstate" \
                      -backend-config="key=terraform.tfstate"
   env:

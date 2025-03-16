@@ -11,8 +11,8 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
-module "networking" {
-  source              = "./modules/networking"
+module "network" {
+  source              = "./modules/network"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 }
@@ -27,14 +27,14 @@ module "aks" {
   source              = "./modules/aks"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  vnet_subnet_id      = module.networking.aks_subnet_id
+  vnet_subnet_id      = module.network.aks_subnet_id
   acr_id              = module.acr.acr_id
 }
 
 module "sql" {
-  source              = "./modules/sql"
+  source              = "./modules/database"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  subnet_id           = module.networking.sql_subnet_id
+  subnet_id           = module.network.sql_subnet_id
   sql_admin_password  = var.sql_admin_password
 }
